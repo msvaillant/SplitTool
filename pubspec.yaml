@@ -1,0 +1,6 @@
+name: SplitTool
+version: 0.0.1
+description: Split - the system utilite
+dependencies:
+  args: any
+  io: any
