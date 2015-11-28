@@ -34,7 +34,7 @@ main(List<String> args) {
   }
   
   if(results['dry-run']){
-    print(GetInfo(targetPath, regex, attribute, recurse));
+    stdout.writeln(GetInfo(targetPath, regex, attribute, recurse));
     exit(0);
   }
   Map env = Platform.environment;
@@ -75,9 +75,9 @@ int Validate(String target, String destination)
   return 0;
 }
 
-List<String> GetInfo(String target, RegExp filter, String attribute, bool recurse)
+String GetInfo(String target, RegExp filter, String attribute, bool recurse)
 {
-  return GetFiles(target, filter, attribute, recurse);
+  return GetFiles(target, filter, attribute, recurse).join("\n");
 }
 
 List<String> GetFiles(String target, RegExp filter, String attribute, bool recurse)
@@ -97,7 +97,7 @@ List<String> GetFiles(String target, RegExp filter, String attribute, bool recur
 
 RegExp FromWildCardToRegExp(String wildCard)
 {
-  return new RegExp(r'^' + wildCard.replaceAll("*", r"\*").replaceAll(r"?", ".") + r'$', caseSensitive: false);
+  return new RegExp(r'^' + wildCard.replaceAll("*", r".*").replaceAll(r"?", ".") + r'$', caseSensitive: false);
 }
 
 List<String> Split(String target, String destination, RegExp filter, String attribute, bool recurse, bool suppress)
