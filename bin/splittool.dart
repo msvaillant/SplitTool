@@ -14,7 +14,7 @@ main(List<String> args) {
         })
     ..addFlag("recurse", abbr: "r", help: "Specifies if it is needed to look throuh the nested folders", defaultsTo: false, negatable: false)
     ..addFlag("suppress", abbr: "s", help: "Specifies if it is needed to ask for overwriting existing files in destinatino folder", defaultsTo: false, negatable: true)
-    ..addFlag("info", abbr: "i", help: "Shows the files in target path that will be transfered. According to the specified filters.", defaultsTo: false)
+    ..addFlag("dry-run", help: "Shows the files in target path that will be transfered. According to the specified filters.", defaultsTo: false)
     ..addFlag("help", abbr:"h", help: "Shows usage information");
   
   var results = parser.parse(args);
@@ -30,8 +30,8 @@ main(List<String> args) {
     exit(0);
   }
   
-  if(results["info"]){
-    print(GetInfo());
+  if(results["dry-run"]){
+    print(GetInfo(targetPath, filter, attribute, recurse));
     exit(0);
   }
   Map env = Platform.environment;
@@ -40,9 +40,8 @@ main(List<String> args) {
   
   int validationResult = Validate(targetPath, destinationPath);
   if(validationResult == 0)
-    Split(targetPath, destinationPath, attribute, filter, recurse, suppress);
-  
-  
+    stdout.writeln(Split(targetPath, destinationPath, attribute, filter, recurse, suppress));
+    
   exit(validationResult);
 }
 
@@ -58,12 +57,31 @@ int Validate(String target, String destination)
     return 2;
   }
   
+  if(!(new Directory(target).existsSync()))
+  {
+    stderr.writeln("An error occured, the $target folder doesn't exist. Check path.");
+    return 2;
+  }
+  
+  if(!(new Directory(destination).existsSync()))
+  {
+    stderr.writeln("An error occured, the $destination folder doesn't exist. Check path.");
+    return 2;
+  }
+  
   return 0;
 }
 
-List<String> GetInfo()
+List<String> GetInfo(String target, String filter, String attribute, bool recurse)
 {
   
+}
+
+List<String> GetFiles(String target, String filter, String attribute, bool recurse)
+{
+  var targ = new Directory(target);
+  var files = targ.listSync(recursive:recurse, followLinks: false);
+  files.retainWhere((file) => file is File);
 }
 
 List<String> Split(String target, String destination, String filter, String attribute, bool recurse, bool suppress)
