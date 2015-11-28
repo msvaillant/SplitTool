@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:path/path.dart' as Path;
 
 main(List<String> args) {
   var parser = new ArgParser()
@@ -18,29 +19,31 @@ main(List<String> args) {
     ..addFlag("help", abbr:"h", help: "Shows usage information");
   
   var results = parser.parse(args);
-  var targetPath = results["target"];
-  var destinationPath = results["destination"];
-  var filter = results["filter"];
-  var attribute = results["attribute"];
+  String targetPath = results["target"];
+  String destinationPath = results["destination"];
+  String filter = results["filter"];
+  String attribute = results["attribute"];
   bool recurse = results["recurse"];
   bool suppress = results["suppress"];
   
-  if(results["help"]){
+  var regex = FromWildCardToRegExp(filter);
+  
+  if(results['help']){
     stdout.writeln(parser.usage);
     exit(0);
   }
   
-  if(results["dry-run"]){
-    print(GetInfo(targetPath, filter, attribute, recurse));
+  if(results['dry-run']){
+    print(GetInfo(targetPath, regex, attribute, recurse));
     exit(0);
   }
   Map env = Platform.environment;
-  if(env["COPYCMD"]!= null)
-    suppress = env["COPYCMD"] == "/Y";
+  if(env['COPYCMD']!= null)
+    suppress = env['COPYCMD'] == r'/Y';
   
   int validationResult = Validate(targetPath, destinationPath);
   if(validationResult == 0)
-    stdout.writeln(Split(targetPath, destinationPath, attribute, filter, recurse, suppress));
+    stdout.writeln(Split(targetPath, destinationPath, regex, attribute,  recurse, suppress));
     
   exit(validationResult);
 }
@@ -72,19 +75,32 @@ int Validate(String target, String destination)
   return 0;
 }
 
-List<String> GetInfo(String target, String filter, String attribute, bool recurse)
+List<String> GetInfo(String target, RegExp filter, String attribute, bool recurse)
 {
+  return GetFiles(target, filter, attribute, recurse);
+}
+
+List<String> GetFiles(String target, RegExp filter, String attribute, bool recurse)
+{
+  var items = new Directory(target).listSync(recursive:recurse, followLinks: false)
+    ..retainWhere((file) => file is File);
   
+  List<String> files = new List<String>();
+  for(var file in items)
+  {
+    String fileName = Path.basename(file.path);
+    if(filter.hasMatch(fileName))
+      files.add(fileName);
+  }
+  return files;
 }
 
-List<String> GetFiles(String target, String filter, String attribute, bool recurse)
+RegExp FromWildCardToRegExp(String wildCard)
 {
-  var targ = new Directory(target);
-  var files = targ.listSync(recursive:recurse, followLinks: false);
-  files.retainWhere((file) => file is File);
+  return new RegExp(r'^' + wildCard.replaceAll("*", r"\*").replaceAll(r"?", ".") + r'$', caseSensitive: false);
 }
 
-List<String> Split(String target, String destination, String filter, String attribute, bool recurse, bool suppress)
+List<String> Split(String target, String destination, RegExp filter, String attribute, bool recurse, bool suppress)
 {
   
 }
