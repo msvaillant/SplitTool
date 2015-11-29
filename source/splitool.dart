@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:args/args.dart';
+import 'package:path/path.dart' as Path;
 
 import 'helper.dart';
 
 main(List<String> args) {
   var parser = new ArgParser()
-    ..addOption("target", abbr:  "t", help:  "Used to specify the path to th folder to work with", valueHelp:"path", defaultsTo: "")
+    ..addOption("target", abbr:  "t", help:  "Used to specify the path to th folder to work with", valueHelp:"path")
     ..addOption("destination", abbr: "d", help: "Used to specify the path to place the moved files, is required", valueHelp:"path")
     ..addOption("filter", abbr: "f", help: "Specifies the mask for files to move", defaultsTo: "*.*")
     ..addOption("attribute", abbr: "a", help: "Is used to specify which kind of files system objects to select (for example Hidden)",allowed: ["h", "n"] ,
@@ -75,4 +76,43 @@ int Validate(String target, String destination)
   }
   
   return 0;
+}
+
+String Split(String target, String destination, RegExp filter,
+    String attribute, bool recurse, bool suppress)
+{
+  var files = GetFiles(target, filter, attribute, recurse);
+  List<String> movedFiles = new List<String>();
+  
+  for (var file in files) 
+  {
+    String destFile = Path.join(destination, Path.basename(file));
+    bool process = true;
+    //This peace of code could be simplified, maybe. It is needed to find how to make it easy.
+    if (FileSystemEntity.isFileSync(destFile))
+    {
+      if(suppress){
+        new File(destFile).deleteSync();
+      }
+      else{
+        stdout.writeln("Do you want to overwrite the file $destFile\n[Y]es or [N]o");
+        
+        String key = stdin.readLineSync();
+        if (key == "Y"){
+          new File(destFile).deleteSync();
+        }
+        else{
+          process = false;
+        }
+      }
+    }
+    
+    if(process)
+    {
+      new File(file).renameSync(destFile);
+      movedFiles.add(Path.basename(file));
+    }
+  }
+  
+  return movedFiles.join("\n");
 }
