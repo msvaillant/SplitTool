@@ -15,7 +15,7 @@ main(List<String> args) {
           "h": "Hidden files",
           "n": "Normal files (default option)"
         })
-    ..addFlag("recurse", abbr: "r", help: "Specifies if it is needed to look throuh the nested folders", defaultsTo: false, negatable: false)
+    ..addFlag("recurse", abbr: "r", help: "Specifies if it is needed to look throuh the nested folders", defaultsTo: false)
     ..addFlag("suppress", abbr: "s", help: "Specifies if it is needed to ask for overwriting existing files in destinatino folder", defaultsTo: false, negatable: true)
     ..addFlag("dry-run", help: "Shows the files in target path that will be transfered. According to the specified filters.", defaultsTo: false)
     ..addFlag("help", abbr:"h", help: "Shows usage information");
